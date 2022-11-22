@@ -1,3 +1,5 @@
+# https://towardsdatascience.com/introduction-to-linear-regression-in-python-c12a072bedf0
+
 import numpy as np
 
 def regression_line(X: np.ndarray, y: np.ndarray) -> np.ndarray: 

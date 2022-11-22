@@ -16,6 +16,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
+# use your own API_KEY and API_SECRET key
 client = Client(api_key=API_KEY, api_secret=API_SECRET)              # Calling the Binance api
 prices = client.get_all_tickers()                                    # Get the Price data
 
@@ -44,12 +45,15 @@ for i in EMA_RIBBON:
 
 
 df["Close"] = df["Close"].astype(float)
+# rsi
 indicators["rsi"] = ta.rsi(df["Close"])
+# bollinger
 bollingers = ta.bbands(df["Close"], length=20, std=2, append=True)
 bollingers.columns = BBANDS_NAMES
 nan_indices = np.where(bollingers['low'].notnull())[0]
 length = nan_indices[0]
 bollingers.loc[:length] = np.flip(bollingers[length:length+length+1].to_numpy(), axis=0)
+# macd
 macd = ta.macd(df["Close"])
 macd.columns = MACD_NAMES 
 
