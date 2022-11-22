@@ -89,17 +89,9 @@ fig.update_layout(xaxis_rangeslider_visible=False)
 
 fig.add_trace(go.Scatter(x=df["Date"], y=indicators["rsi"]), row=2, col=1)
 fig.add_trace(go.Scatter(mode="markers",x=df["Date"], y=peak_pos, marker=dict(size=5, color="#ff4242")), row=2, col=1)
-fig.add_trace(go.Bar(x=df["Date"], y=macd["hist"]), row=3, col=1)
+fig.add_trace(go.Bar(x=df["Date"], y=macd["hist"]), row=3, col=1)    # I couldn't find the easier way will check later
 fig.add_trace(go.Scatter(x=df["Date"], y=macd["macd"]), row=3, col=1)
 fig.add_trace(go.Scatter(x=df["Date"], y=macd["sig"]), row=3, col=1)
 
 
 fig.show()
-
-
-
-
-
-
-
-
