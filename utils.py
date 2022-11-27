@@ -20,7 +20,7 @@ def regression_line(X: np.ndarray, y: np.ndarray) -> np.ndarray:
     
     return alpha + beta * X
 
-def gain(opens: np.array, closes: np.array, window=2):
+def gain(opens: np.array, closes: np.array, window=2) -> float:
     """calculating the asset gain over the data"""
     return (closes - opens).sum()
 
@@ -30,7 +30,7 @@ def gradient(arr: np.ndarray) -> np.ndarray:
     """
     return np.gradient(arr, dx=1, edge_order=2)
 
-def _xlogx(x: np.ndarray, base=2)-> np.ndarray:
+def _xlogx(x: np.ndarray, base=2) -> np.ndarray:
     """Returns x log_b x if x is positive, 0 if x == 0, and np.nan
     otherwise. This handles the case when the power spectrum density
     takes any zero value.
