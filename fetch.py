@@ -3,12 +3,12 @@
 import numpy as np
 from scipy.signal import find_peaks
 from scipy.interpolate import interp1d
-from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
+from binance import Client
 from keys import API_KEY, API_SECRET
 from datetime import datetime
 import plotly.graph_objects as go
 import plotly.io as pio
-from regression import regression_line
+from utils import regression_line, gain
 from plotly.subplots import make_subplots
 import pandas as pd
 import pandas_ta as ta
@@ -43,7 +43,7 @@ indicators = pd.DataFrame()
 for i in EMA_RIBBON:
     indicators[f'{i}'] = df.Close.ewm(span=int(i)).mean()
 
-
+df["Open"] = df["Open"].astype(float)
 df["Close"] = df["Close"].astype(float)
 # rsi
 indicators["rsi"] = ta.rsi(df["Close"])
@@ -67,6 +67,8 @@ reg_news = pd.DataFrame()
 
 window = 144
 spans = [10, 15, 20]
+
+#gain(df["Open"].to_numpy(), df["Close"].to_numpy())
 
 """
 find the way to plot those regression lines
