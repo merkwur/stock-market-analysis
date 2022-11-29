@@ -103,7 +103,19 @@ def histogram(arr: np.ndarray, bins: int=42, is_plot: bool=False) -> plt or tupl
 
         return (count, b, pde)
     
-    
+def sample_histogram(arr: np.ndarray, bins: int=12, sample_size: int=100, is_plot: bool=False) -> plt or tuple[np.ndarray, np.ndarray, np.ndarray]:
+    sample_arr = np.random.choice(arr, sample_size)
+    if is_plot:
+        plt.style.use("Solarize_Light2")
+        count, b, _ = plt.hist(arr, bins=bins, density=True)
+        plt.plot(b, PDE(arr.mean(), arr.std(), b), c="orange")
+
+        plt.show()
+    else: 
+        count, b = np.histogram(arr, bins=bins, density=True)
+        pde = PDE(arr.mean(), arr.std(), b)
+
+        return (count, b, pde)    
     
 
 

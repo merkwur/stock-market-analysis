@@ -69,6 +69,7 @@ window = 144
 spans = [10, 15, 20]
 
 # utils.histogram(df["Open"], is_plot=True) #try this
+# utils.sample_histogram(df["Open"], is_plot=True) #try this
 
 """
 find the way to plot those regression lines
