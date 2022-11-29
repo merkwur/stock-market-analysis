@@ -8,7 +8,7 @@ from keys import API_KEY, API_SECRET
 from datetime import datetime
 import plotly.graph_objects as go
 import plotly.io as pio
-from utils import regression_line, gain
+import utils
 from plotly.subplots import make_subplots
 import pandas as pd
 import pandas_ta as ta
@@ -68,7 +68,9 @@ reg_news = pd.DataFrame()
 window = 144
 spans = [10, 15, 20]
 
-#gain(df["Open"].to_numpy(), df["Close"].to_numpy())
+
+# utils.histogram(df["Open"], is_plot=True) #try this
+
 
 """
 find the way to plot those regression lines
@@ -80,14 +82,13 @@ for j in spans:
     for i in range(0, len(peaks), len(peaks)//j):
         if i + window > len(peaks):
             window = len(peaks) - i
-            regressions[f"REG{j}"].iloc[i: i+window] = regression_line(peaks[i:i+window], indicators["rsi"].iloc[peaks[i:i+window]])
+            regressions[f"REG{j}"].iloc[i: i+window] = utils.regression_line(peaks[i:i+window], indicators["rsi"].iloc[peaks[i:i+window]])
             break
-        else: regressions[f"REG{j}"].iloc[i: i+window] = regression_line(peaks[i:i+window], indicators["rsi"].iloc[peaks[i:i+window]])
+        else: regressions[f"REG{j}"].iloc[i: i+window] = utils.regression_line(peaks[i:i+window], indicators["rsi"].iloc[peaks[i:i+window]])
 
     f = interp1d(np.arange(0,len(regressions[f"REG{j}"][:-2]), 1), regressions[f"REG{j}"][:-2])
     reg_news[f"REG{j}"] = f(np.linspace(0, len(regressions[f"REG{j}"][:-2])-1, len(df["Date"])))
 
-# plot the data
 
 pio.templates.default = "plotly_dark"
 
