@@ -87,7 +87,7 @@ def monte_carlo_sampling(arr: np.ndarray, n_exp: int=1000) -> float:
     
     return (np.sqrt( np.sum(np.power((mues - mues.mean()), 2))) * 100).round(6)
 
-def PDE(mu, sigma, z):
+def PDE(mu: float, sigma: float, z: np.ndarray) -> np.ndarray:
     return (1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(-(z-mu)**2 / (2 * sigma**2)))
 
 def histogram(arr: np.ndarray, bins: int=42, is_plot: bool=False) -> plt or tuple[np.ndarray, np.ndarray, np.ndarray]:
