@@ -74,8 +74,8 @@ def GM(arr):
 
 def entropy(openings: np.ndarray, closings: np.ndarray) -> float:
     size = len(openings)
-    ratio_a = np.where(closings > openings, 1, 0).sum() 
-    ratio_b = np.where(closings < openings, 1, 0).sum() 
+    ratio_a = np.where(closings > openings, 1, 0).sum() / size
+    ratio_b = np.where(closings < openings, 1, 0).sum() / size
     return stats.entropy([ratio_a, ratio_b], base=2)
 
 
