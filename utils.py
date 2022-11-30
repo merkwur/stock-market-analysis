@@ -3,9 +3,10 @@
 
 import numpy as np
 import scipy.stats as stats
-from scipy.signal import periodogram
+from scipy import signal
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
+import sounddevice
 
 def standard_error(arr: np.ndarray) -> float:
     """s/sqrt(n)"""
@@ -53,7 +54,7 @@ def spectral_entropy(arr: np.ndarray) -> float:
     """
     Calculates the spectral entropy of a signal
     """
-    _, psd = periodogram(arr.to_numpy(), fs=1)
+    _, psd = signal.periodogram(arr.to_numpy(), fs=1)
     psd_norm = psd / psd.sum(axis=0, keepdims=True)
     return -_xlogx(psd_norm).sum(axis=0)
 
@@ -69,7 +70,7 @@ def sign_test(openings: np.ndarray, closings: np.ndarray) -> float:
 def test_stats(observed: np.ndarray, expected: np.ndarray) -> float: #!!!!!!!!
     return (observed - expected) / standard_error(data)
 
-def GM(arr):
+def GM(arr: np.ndarray) -> float:
     return stats.gmean(arr)
 
 def entropy(openings: np.ndarray, closings: np.ndarray) -> float:
@@ -117,6 +118,13 @@ def sample_histogram(arr: np.ndarray, bins: int=12, sample_size: int=100, is_plo
 
         return (count, b, pde)    
     
+def contingency_table(arr: np.ndarray) -> list[int, int]:
+    ratio_a = np.where(closings > openings, 1, 0).sum()
+    ratio_b = np.where(closings < openings, 1, 0).sum()
+
+    return [ratio_a, ratio_b]
+
+
 
 
 

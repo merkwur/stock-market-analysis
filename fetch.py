@@ -9,10 +9,17 @@ from datetime import datetime
 import plotly.graph_objects as go
 import plotly.io as pio
 import utils
+import argparse
 from plotly.subplots import make_subplots
 import pandas as pd
 import pandas_ta as ta
 import warnings 
+
+
+parser = argparse.ArgumentParser(description='Description of your program')
+parser.add_argument('-p', dest='plot', action='store_true', help="Plots the indicators")
+args = parser.parse_args()
+
 
 warnings.filterwarnings("ignore")
 
@@ -68,56 +75,37 @@ reg_news = pd.DataFrame()
 window = 144
 spans = [10, 15, 20]
 
-# utils.histogram(df["Open"], is_plot=True) #try this
-# utils.sample_histogram(df["Open"], is_plot=True) #try this
+if args.plot:
 
-"""
-find the way to plot those regression lines
-select the peaks in a different way
-there is an artefact at the end of the regression, interpolating it making the plot false
-"""
-for j in spans:
-    regressions[f"REG{j}"] = np.zeros(len(peaks))
-    for i in range(0, len(peaks), len(peaks)//j):
-        if i + window > len(peaks):
-            window = len(peaks) - i
-            regressions[f"REG{j}"].iloc[i: i+window] = utils.regression_line(peaks[i:i+window], indicators["rsi"].iloc[peaks[i:i+window]])
-            break
-        else: regressions[f"REG{j}"].iloc[i: i+window] = utils.regression_line(peaks[i:i+window], indicators["rsi"].iloc[peaks[i:i+window]])
+    pio.templates.default = "plotly_dark"
 
-    f = interp1d(np.arange(0,len(regressions[f"REG{j}"][:-2]), 1), regressions[f"REG{j}"][:-2])
-    reg_news[f"REG{j}"] = f(np.linspace(0, len(regressions[f"REG{j}"][:-2])-1, len(df["Date"])))
+    fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
 
+    for e, i in enumerate([x for x in indicators.columns if x.isnumeric()]):
+        fig.add_trace(go.Scatter(name=f"EMA{i}", x=df["Date"], y=indicators[f"{i}"], 
+                                line=dict(color=EMA_RIBBON_COLORS[e], width=1)),
+                  row=1, col=1)
 
-pio.templates.default = "plotly_dark"
+    fig.add_trace(go.Scatter(name="BUP", x=df["Date"], y=bollingers["high"], line=dict(color="rgba(131, 165, 152, .5)", width=1)),
+                  row=1, col=1)
+    fig.add_trace(go.Scatter(name="BDO", x=df["Date"], y=bollingers["low"], line=dict(color="rgba(131, 165, 152, .5)", width=1), fill="tonexty"),
+                  row=1, col=1)
+    fig.add_trace(go.Candlestick(name="CAND", x=df['Date'],
+                                         open=df['Open'],
+                                         high=df['High'],
+                                         low=df['Low'],
+                                         close=df['Close']), row=1, col=1)
+    fig.update_layout(xaxis_rangeslider_visible=False)
+    fig.add_trace(go.Scatter(name="RSI", x=df["Date"], y=indicators["rsi"],line=dict(color="#ebdbb2")), row=2, col=1)
 
-fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
+    # for e, i in enumerate(reg_news.columns):
+    #     fig.add_trace(go.Scatter(name=f"{i}", x=df["Date"], y=reg_news[f"{i}"], 
+    #                             line=dict(color=EMA_RIBBON_COLORS[e], width=1)), row=2, col=1)
 
-for e, i in enumerate([x for x in indicators.columns if x.isnumeric()]):
-    fig.add_trace(go.Scatter(name=f"EMA{i}", x=df["Date"], y=indicators[f"{i}"], 
-                            line=dict(color=EMA_RIBBON_COLORS[e], width=1)),
-              row=1, col=1)
-
-fig.add_trace(go.Scatter(name="BUP", x=df["Date"], y=bollingers["high"], line=dict(color="rgba(131, 165, 152, .5)", width=1)),
-              row=1, col=1)
-fig.add_trace(go.Scatter(name="BDO", x=df["Date"], y=bollingers["low"], line=dict(color="rgba(131, 165, 152, .5)", width=1), fill="tonexty"),
-              row=1, col=1)
-fig.add_trace(go.Candlestick(name="CAND", x=df['Date'],
-                                     open=df['Open'],
-                                     high=df['High'],
-                                     low=df['Low'],
-                                     close=df['Close']), row=1, col=1)
-fig.update_layout(xaxis_rangeslider_visible=False)
-fig.add_trace(go.Scatter(name="RSI", x=df["Date"], y=indicators["rsi"],line=dict(color="#ebdbb2")), row=2, col=1)
-
-# for e, i in enumerate(reg_news.columns):
-#     fig.add_trace(go.Scatter(name=f"{i}", x=df["Date"], y=reg_news[f"{i}"], 
-#                             line=dict(color=EMA_RIBBON_COLORS[e], width=1)), row=2, col=1)
-
-fig.add_trace(go.Scatter(name="RSIPEAKS", mode="markers",x=df["Date"], y=peak_pos, marker=dict(size=5, color="#d65d0e")), row=2, col=1)
-fig.add_trace(go.Bar(name="HIST", x=df["Date"], y=macd["hist"]), row=3, col=1)    # I couldn't find the easier way will check later
-fig.add_trace(go.Scatter(name="MACD", x=df["Date"], y=macd["macd"]), row=3, col=1)
-fig.add_trace(go.Scatter(name="SIG", x=df["Date"], y=macd["sig"]), row=3, col=1)
+    fig.add_trace(go.Scatter(name="RSIPEAKS", mode="markers",x=df["Date"], y=peak_pos, marker=dict(size=5, color="#d65d0e")), row=2, col=1)
+    fig.add_trace(go.Bar(name="HIST", x=df["Date"], y=macd["hist"]), row=3, col=1)    # I couldn't find the easier way will check later
+    fig.add_trace(go.Scatter(name="MACD", x=df["Date"], y=macd["macd"]), row=3, col=1)
+    fig.add_trace(go.Scatter(name="SIG", x=df["Date"], y=macd["sig"]), row=3, col=1)
 
 
-fig.show()
+    fig.show()
