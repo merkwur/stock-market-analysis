@@ -118,7 +118,7 @@ def sample_histogram(arr: np.ndarray, bins: int=12, sample_size: int=100, is_plo
 
         return (count, b, pde)    
     
-def contingency_table(arr: np.ndarray) -> list[int, int]:
+def contingency_table(openings: np.ndarray, closing: np.ndarray) -> list[int, int]:
     ratio_a = np.where(closings > openings, 1, 0).sum()
     ratio_b = np.where(closings < openings, 1, 0).sum()
 
