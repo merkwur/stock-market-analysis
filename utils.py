@@ -9,9 +9,6 @@ import matplotlib.pyplot as plt
 import sounddevice
 
 
-
-
-
 def standard_error(arr: np.ndarray) -> float:
     """s/sqrt(n)"""
     return stats.sem(arr)

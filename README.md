@@ -3,10 +3,16 @@
 Simple stock market data analysis tool. 
 
 
-To use the plot simpy add the ```-p``` flag:
+Add new flags to customize the plots.
 
 ```
-python fetch.py -p
+-p      # plots candlestick chart
+-er     # plots the EMA Ribbon
+-bb     # plots the Bollinger Bands
+-rs     # Plots the RSI
+-md     # Plots the MACD
+-pall   # Plots all 
+-c      # prepares the contingency table
 ```
 
 ![](images/Screenshot%20from%202022-11-27%2021-01-41.png)
