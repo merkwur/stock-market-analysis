@@ -68,10 +68,7 @@ def sign_test(openings: np.ndarray, closings: np.ndarray) -> float:
     outrun = np.where(closings > openings, 1, 0).sum()
     return (outrun - (size / 2)) / (standard_error(openings) * .5)
 
-def test_stats(observed: np.ndarray, expected: np.ndarray) -> float: #!!!!!!!!
-    return (observed - expected) / standard_error(data)
-
-def GM(arr: np.ndarray) -> float:
+def geometric_mean(arr: np.ndarray) -> float:
     return stats.gmean(arr)
 
 def entropy(openings: np.ndarray, closings: np.ndarray) -> float:
@@ -90,9 +87,13 @@ def monte_carlo_sampling(arr: np.ndarray, n_exp: int=1000) -> float:
     return (np.sqrt( np.sum(np.power((mues - mues.mean()), 2))) * 100).round(6)
 
 def PDE(mu: float, sigma: float, z: np.ndarray) -> np.ndarray:
+    """Return to probability density estimation of the distribution"""
     return (1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(-(z-mu)**2 / (2 * sigma**2)))
 
 def histogram(arr: np.ndarray, bins: int=42, is_plot: bool=False) -> plt or tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Returns either histogram plot or the histogram and PDE data. 
+    """
     if is_plot:
         plt.style.use("Solarize_Light2")
         count, b, _ = plt.hist(arr, bins=bins, density=True)
@@ -106,6 +107,9 @@ def histogram(arr: np.ndarray, bins: int=42, is_plot: bool=False) -> plt or tupl
         return (count, b, pde)
     
 def sample_histogram(arr: np.ndarray, bins: int=12, sample_size: int=100, is_plot: bool=False) -> plt or tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Returns either histogram plot or the histogram and PDE sampled data. 
+    """
     arr = np.random.choice(arr, sample_size)
     if is_plot:
         plt.style.use("Solarize_Light2")
@@ -119,7 +123,12 @@ def sample_histogram(arr: np.ndarray, bins: int=12, sample_size: int=100, is_plo
 
         return (count, b, pde)    
     
+def chi_square(observed: np.ndarray, expected: np.ndarray) -> float:
+    return np.sum(np.power((observed - expected), 2) / expected)
+
 def contingency_table(openings: np.ndarray, closings: np.ndarray) -> list[int, int]:
+
+    """Returns the amount of the green and red candles"""
 
     ratio_a = np.where(closings > openings, 1, 0).sum()
     ratio_b = np.where(closings < openings, 1, 0).sum()

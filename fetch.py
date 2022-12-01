@@ -1,19 +1,18 @@
 # !usr/bin/python3.10
 
-import numpy as np
-from scipy.signal import find_peaks
-from scipy.interpolate import interp1d
-from binance import Client
-from keys import API_KEY, API_SECRET
-from datetime import datetime
-import plotly.graph_objects as go
-import plotly.io as pio
-import constants
-import utils
 import argparse
-from plotly.subplots import make_subplots
+import numpy as np
 import pandas as pd
 import pandas_ta as ta
+from datetime import datetime
+from keys import API_KEY, API_SECRET
+from scipy.signal import find_peaks
+from binance import Client
+import plotly.graph_objects as go
+import plotly.io as pio
+from plotly.subplots import make_subplots
+import utils
+import constants
 import warnings 
 warnings.filterwarnings("ignore")
 
@@ -26,6 +25,7 @@ parser.add_argument('-bb', dest='bbands', action='store_true', help="Includes th
 parser.add_argument('-rs', dest='rsi', action='store_true', help="Includes the RSI to the plot, to show must include -p first")
 parser.add_argument('-md', dest='macd', action='store_true', help="Includes the MACD to the plot, to show must include -p first")
 parser.add_argument('-pall', dest='pall', action='store_true', help="Includes the MACD to the plot, to show must include -p first")
+parser.add_argument('-test', dest='test', action='store_true', help="Plots the indicators")
 args = parser.parse_args()
 
 
@@ -33,7 +33,7 @@ EMA_RIBBON = [12, 21, 34, 42, 55, 62]
 EMA_RIBBON_COLORS = ["#ff4242", "#ff4266", "#ff4288", "#ff42aa", "#ff42bb", "#ff42cc"]
 BBANDS_NAMES = ["low", "mid", "high", 'bandwith', "percent"]
 MACD_NAMES = ["macd", "hist", "sig"]
-
+REDUCED = ["OpenTime", "Open","High", "Low", "Close", "Volume"]
 
 # use your own API_KEY and API_SECRET key
 client = Client(api_key=API_KEY, api_secret=API_SECRET)              # Calling the Binance api
@@ -49,27 +49,41 @@ columns = ["OpenTime", "Open","High", "Low", "Close", "Volume", "CloseTime",
 
 # candlestick data to dataframe
 df = pd.DataFrame(klines, columns=columns)
-df = df.loc[: ,["OpenTime", "Open","High", "Low", "Close", "Volume" ]]
-df["Open"] = df["Open"].astype(float)
-df["Close"] = df["Close"].astype(float)
+df = df.loc[:, REDUCED]
+
+for i in REDUCED:
+    df[f"{i}"] = df[f"{i}"].astype(float)
+
 # timestamp to date
 df["Date"] = df["OpenTime"].apply(lambda x: datetime.fromtimestamp(int(x/1000)).strftime("%d/%m/%Y, %H:%M:%S"))
 
-
+# contingency table and chi_squared 
 if args.contingency:
     contingency = pd.DataFrame()
-    contingency["status"] = constants.ud
     for i in constants.intervals:
         contlines = client.get_historical_klines(pairs[0], i, "1 day ago UTC") # One day lenght of one minute market data
-
         table = pd.DataFrame(contlines, columns=columns)
         table = table.loc[:, ["Open","Close" ]]
         ret = utils.contingency_table(table["Open"], table["Close"])
         contingency[f"{i}"] = ret
 
-    contingency.set_index(["status"])
-    print(contingency)
+    weighted_greens = np.expand_dims(contingency.iloc[0].to_numpy(), axis=0).dot(constants.weights.T)[0].round(3)
+    weighted_red = np.expand_dims(contingency.iloc[1].to_numpy(), axis=0).dot(constants.weights.T)[0].round(3)
+    expected = contingency.copy()
+    contingency["simple_sum"] = contingency.sum(axis=1)
+    contingency["weighted_sum"] = [weighted_greens, weighted_red]
+    weighted_expected = weighted_greens / weighted_red
+    expected.iloc[0] = contingency.loc[0, :"4h"] * weighted_expected
+    expected.iloc[1] = contingency.loc[1, :"4h"] * weighted_expected
 
+    green_chi = utils.chi_square(contingency.loc[0, :"4h"], expected.iloc[0])
+    red_chi = utils.chi_square(contingency.loc[1, :"4h"], expected.iloc[1])
+    
+    print(contingency)
+    print(weighted_expected)
+    print(expected)
+    print(green_chi)
+    print(red_chi)
 
 # preparing indicators
 indicators = pd.DataFrame()
@@ -99,6 +113,11 @@ if args.macd:
     macd = ta.macd(df["Close"])
     macd.columns = MACD_NAMES 
 
+
+# put the test cases inside of the statement 
+if args.test:
+    chi = utils.chi_square(df["Close"], df["High"].to_numpy())
+    print(chi)
 
 if args.plot:
 
@@ -134,9 +153,6 @@ if args.plot:
 
     fig.update_layout(xaxis_rangeslider_visible=False)
     fig.show()
-
-
-
 
 if args.pall:
     for i in EMA_RIBBON:

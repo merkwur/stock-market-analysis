@@ -13,6 +13,7 @@ Add new flags to customize the plots.
 -md     # Plots the MACD
 -pall   # Plots all 
 -c      # prepares the contingency table
+-test   # test case
 ```
 
 ![](images/Screenshot%20from%202022-11-27%2021-01-41.png)
