@@ -8,12 +8,14 @@ from keys import API_KEY, API_SECRET
 from datetime import datetime
 import plotly.graph_objects as go
 import plotly.io as pio
+import constants
 import utils
 import argparse
 from plotly.subplots import make_subplots
 import pandas as pd
 import pandas_ta as ta
 import warnings 
+warnings.filterwarnings("ignore")
 
 
 parser = argparse.ArgumentParser(description='Description of your program')
@@ -21,7 +23,11 @@ parser.add_argument('-p', dest='plot', action='store_true', help="Plots the indi
 args = parser.parse_args()
 
 
-warnings.filterwarnings("ignore")
+EMA_RIBBON = [12, 21, 34, 42, 55, 62]
+EMA_RIBBON_COLORS = ["#ff4242", "#ff4266", "#ff4288", "#ff42aa", "#ff42bb", "#ff42cc"]
+BBANDS_NAMES = ["low", "mid", "high", 'bandwith', "percent"]
+MACD_NAMES = ["macd", "hist", "sig"]
+
 
 # use your own API_KEY and API_SECRET key
 client = Client(api_key=API_KEY, api_secret=API_SECRET)              # Calling the Binance api
@@ -37,13 +43,23 @@ columns = ["OpenTime", "Open","High", "Low", "Close", "Volume", "CloseTime",
 
 # candlestick data to dataframe
 df = pd.DataFrame(klines, columns=columns)
+df = df.loc[: ,["OpenTime", "Open","High", "Low", "Close", "Volume" ]]
 # timestamp to date
 df["Date"] = df["OpenTime"].apply(lambda x: datetime.fromtimestamp(int(x/1000)).strftime("%d/%m/%Y, %H:%M:%S"))
 
-EMA_RIBBON = [12, 21, 34, 42, 55, 62]
-EMA_RIBBON_COLORS = ["#ff4242", "#ff4266", "#ff4288", "#ff42aa", "#ff42bb", "#ff42cc"]
-BBANDS_NAMES = ["low", "mid", "high", 'bandwith', "percent"]
-MACD_NAMES = ["macd", "hist", "sig"]
+contingency = pd.DataFrame()
+contingency["status"] = constants.ud
+for i in constants.intervals:
+    contlines = client.get_historical_klines(pairs[0], i, "1 day ago UTC") # One day lenght of one minute market data
+
+    table = pd.DataFrame(contlines, columns=columns)
+    table = table.loc[:, ["Open","Close" ]]
+    ret = utils.contingency_table(table["Open"], table["Close"])
+    contingency[f"{i}"] = ret
+
+contingency.set_index(["status"])
+print(contingency)
+
 
 # preparing indicators
 indicators = pd.DataFrame()
@@ -52,14 +68,17 @@ for i in EMA_RIBBON:
 
 df["Open"] = df["Open"].astype(float)
 df["Close"] = df["Close"].astype(float)
+
 # rsi
 indicators["rsi"] = ta.rsi(df["Close"])
+
 # bollinger
 bollingers = ta.bbands(df["Close"], length=20, std=2, append=True)
 bollingers.columns = BBANDS_NAMES
 nan_indices = np.where(bollingers['low'].notnull())[0]
 length = nan_indices[0]
 bollingers.loc[:length] = np.flip(bollingers[length:length+length+1].to_numpy(), axis=0)
+
 # macd
 macd = ta.macd(df["Close"])
 macd.columns = MACD_NAMES 
@@ -68,9 +87,6 @@ macd.columns = MACD_NAMES
 peaks, _ = find_peaks(indicators["rsi"].to_numpy())
 peak_pos = np.zeros(len(df["Date"]))
 peak_pos[peaks] = indicators["rsi"].iloc[peaks]
-
-regressions = pd.DataFrame()
-reg_news = pd.DataFrame()
 
 window = 144
 spans = [10, 15, 20]

@@ -8,6 +8,10 @@ from numpy.linalg import norm
 import matplotlib.pyplot as plt
 import sounddevice
 
+
+
+
+
 def standard_error(arr: np.ndarray) -> float:
     """s/sqrt(n)"""
     return stats.sem(arr)
@@ -105,7 +109,7 @@ def histogram(arr: np.ndarray, bins: int=42, is_plot: bool=False) -> plt or tupl
         return (count, b, pde)
     
 def sample_histogram(arr: np.ndarray, bins: int=12, sample_size: int=100, is_plot: bool=False) -> plt or tuple[np.ndarray, np.ndarray, np.ndarray]:
-    sample_arr = np.random.choice(arr, sample_size)
+    arr = np.random.choice(arr, sample_size)
     if is_plot:
         plt.style.use("Solarize_Light2")
         count, b, _ = plt.hist(arr, bins=bins, density=True)
@@ -118,7 +122,8 @@ def sample_histogram(arr: np.ndarray, bins: int=12, sample_size: int=100, is_plo
 
         return (count, b, pde)    
     
-def contingency_table(openings: np.ndarray, closing: np.ndarray) -> list[int, int]:
+def contingency_table(openings: np.ndarray, closings: np.ndarray) -> list[int, int]:
+
     ratio_a = np.where(closings > openings, 1, 0).sum()
     ratio_b = np.where(closings < openings, 1, 0).sum()
 
