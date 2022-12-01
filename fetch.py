@@ -88,12 +88,12 @@ if args.contingency:
 # preparing indicators
 indicators = pd.DataFrame()
 
-if args.ema_ribb:
+if args.ema_ribb or args.pall:
     for i in EMA_RIBBON:
         indicators[f'{i}'] = df.Close.ewm(span=int(i)).mean()
 
 # rsi
-if args.rsi:
+if args.rsi or args.pall:
     indicators["rsi"] = ta.rsi(df["Close"])
     # find the rsi signal peaks
     peaks, _ = find_peaks(indicators["rsi"].to_numpy())
@@ -101,7 +101,7 @@ if args.rsi:
     peak_pos[peaks] = indicators["rsi"].iloc[peaks]
 
 # bollinger
-if args.bbands:
+if args.bbands or args.pall:
     bollingers = ta.bbands(df["Close"], length=20, std=2, append=True)
     bollingers.columns = BBANDS_NAMES
     nan_indices = np.where(bollingers['low'].notnull())[0]
@@ -109,7 +109,7 @@ if args.bbands:
     bollingers.loc[:length] = np.flip(bollingers[length:length+length+1].to_numpy(), axis=0)
 
 # macd
-if args.macd:
+if args.macd or args.pall:
     macd = ta.macd(df["Close"])
     macd.columns = MACD_NAMES 
 
@@ -119,7 +119,7 @@ if args.test:
     chi = utils.chi_square(df["Close"], df["High"].to_numpy())
     print(chi)
 
-if args.plot:
+if args.plot or args.pall:
 
     pio.templates.default = "plotly_dark"
     fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
@@ -130,7 +130,7 @@ if args.plot:
                                          low=df['Low'],
                                          close=df['Close']), row=1, col=1)
     
-    if args.bbands:
+    if args.bbands or args.pall:
         for e, i in enumerate([x for x in indicators.columns if x.isnumeric()]):
             fig.add_trace(go.Scatter(name=f"EMA{i}", x=df["Date"], y=indicators[f"{i}"], 
                                     line=dict(color=EMA_RIBBON_COLORS[e], width=1)),
@@ -141,11 +141,11 @@ if args.plot:
         fig.add_trace(go.Scatter(name="BDO", x=df["Date"], y=bollingers["low"], line=dict(color="rgba(131, 165, 152, .5)", width=1), fill="tonexty"),
                     row=1, col=1)
     
-    if args.rsi:
+    if args.rsi or args.pall:
         fig.add_trace(go.Scatter(name="RSI", x=df["Date"], y=indicators["rsi"],line=dict(color="#ebdbb2")), row=2, col=1)
         fig.add_trace(go.Scatter(name="RSIPEAKS", mode="markers",x=df["Date"], y=peak_pos, marker=dict(size=5, color="#d65d0e")), row=2, col=1)
     
-    if args.macd:
+    if args.macd or args.pall:
         fig.add_trace(go.Bar(name="HIST", x=df["Date"], y=macd["hist"]), row=3, col=1)    # I couldn't find the easier way will check later
         fig.add_trace(go.Scatter(name="MACD", x=df["Date"], y=macd["macd"]), row=3, col=1)
         fig.add_trace(go.Scatter(name="SIG", x=df["Date"], y=macd["sig"]), row=3, col=1)
@@ -154,57 +154,57 @@ if args.plot:
     fig.update_layout(xaxis_rangeslider_visible=False)
     fig.show()
 
-if args.pall:
-    for i in EMA_RIBBON:
-        indicators[f'{i}'] = df.Close.ewm(span=int(i)).mean()
+# if args.pall:
+#     for i in EMA_RIBBON:
+#         indicators[f'{i}'] = df.Close.ewm(span=int(i)).mean()
 
-    # rsi
-    indicators["rsi"] = ta.rsi(df["Close"])
+#     # rsi
+#     indicators["rsi"] = ta.rsi(df["Close"])
 
-    # find the rsi signal peaks
-    peaks, _ = find_peaks(indicators["rsi"].to_numpy())
-    peak_pos = np.zeros(len(df["Date"]))
-    peak_pos[peaks] = indicators["rsi"].iloc[peaks]
+#     # find the rsi signal peaks
+#     peaks, _ = find_peaks(indicators["rsi"].to_numpy())
+#     peak_pos = np.zeros(len(df["Date"]))
+#     peak_pos[peaks] = indicators["rsi"].iloc[peaks]
 
-    # bollinger
-    bollingers = ta.bbands(df["Close"], length=20, std=2, append=True)
-    bollingers.columns = BBANDS_NAMES
-    nan_indices = np.where(bollingers['low'].notnull())[0]
-    length = nan_indices[0]
-    bollingers.loc[:length] = np.flip(bollingers[length:length+length+1].to_numpy(), axis=0)
+#     # bollinger
+#     bollingers = ta.bbands(df["Close"], length=20, std=2, append=True)
+#     bollingers.columns = BBANDS_NAMES
+#     nan_indices = np.where(bollingers['low'].notnull())[0]
+#     length = nan_indices[0]
+#     bollingers.loc[:length] = np.flip(bollingers[length:length+length+1].to_numpy(), axis=0)
 
-    # macd
-    macd = ta.macd(df["Close"])
-    macd.columns = MACD_NAMES 
+#     # macd
+#     macd = ta.macd(df["Close"])
+#     macd.columns = MACD_NAMES 
 
-    pio.templates.default = "plotly_dark"
-    fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
+#     pio.templates.default = "plotly_dark"
+#     fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
 
-    fig.add_trace(go.Candlestick(name="CAND", x=df['Date'],
-                                         open=df['Open'],
-                                         high=df['High'],
-                                         low=df['Low'],
-                                         close=df['Close']), row=1, col=1)
+#     fig.add_trace(go.Candlestick(name="CAND", x=df['Date'],
+#                                          open=df['Open'],
+#                                          high=df['High'],
+#                                          low=df['Low'],
+#                                          close=df['Close']), row=1, col=1)
         
-    for e, i in enumerate([x for x in indicators.columns if x.isnumeric()]):
-        fig.add_trace(go.Scatter(name=f"EMA{i}", x=df["Date"], y=indicators[f"{i}"], 
-                                line=dict(color=EMA_RIBBON_COLORS[e], width=1)),
-                row=1, col=1)
+#     for e, i in enumerate([x for x in indicators.columns if x.isnumeric()]):
+#         fig.add_trace(go.Scatter(name=f"EMA{i}", x=df["Date"], y=indicators[f"{i}"], 
+#                                 line=dict(color=EMA_RIBBON_COLORS[e], width=1)),
+#                 row=1, col=1)
 
-    fig.add_trace(go.Scatter(name="BUP", x=df["Date"], y=bollingers["high"], line=dict(color="rgba(131, 165, 152, .5)", width=1)),
-                row=1, col=1)
-    fig.add_trace(go.Scatter(name="BDO", x=df["Date"], y=bollingers["low"], line=dict(color="rgba(131, 165, 152, .5)", width=1), fill="tonexty"),
-                row=1, col=1)
-
-
-    fig.add_trace(go.Scatter(name="RSI", x=df["Date"], y=indicators["rsi"],line=dict(color="#ebdbb2")), row=2, col=1)
-    fig.add_trace(go.Scatter(name="RSIPEAKS", mode="markers",x=df["Date"], y=peak_pos, marker=dict(size=5, color="#d65d0e")), row=2, col=1)
+#     fig.add_trace(go.Scatter(name="BUP", x=df["Date"], y=bollingers["high"], line=dict(color="rgba(131, 165, 152, .5)", width=1)),
+#                 row=1, col=1)
+#     fig.add_trace(go.Scatter(name="BDO", x=df["Date"], y=bollingers["low"], line=dict(color="rgba(131, 165, 152, .5)", width=1), fill="tonexty"),
+#                 row=1, col=1)
 
 
-    fig.add_trace(go.Bar(name="HIST", x=df["Date"], y=macd["hist"]), row=3, col=1)    # I couldn't find the easier way will check later
-    fig.add_trace(go.Scatter(name="MACD", x=df["Date"], y=macd["macd"]), row=3, col=1)
-    fig.add_trace(go.Scatter(name="SIG", x=df["Date"], y=macd["sig"]), row=3, col=1)
+#     fig.add_trace(go.Scatter(name="RSI", x=df["Date"], y=indicators["rsi"],line=dict(color="#ebdbb2")), row=2, col=1)
+#     fig.add_trace(go.Scatter(name="RSIPEAKS", mode="markers",x=df["Date"], y=peak_pos, marker=dict(size=5, color="#d65d0e")), row=2, col=1)
 
 
-    fig.update_layout(xaxis_rangeslider_visible=False)
-    fig.show()
+#     fig.add_trace(go.Bar(name="HIST", x=df["Date"], y=macd["hist"]), row=3, col=1)    # I couldn't find the easier way will check later
+#     fig.add_trace(go.Scatter(name="MACD", x=df["Date"], y=macd["macd"]), row=3, col=1)
+#     fig.add_trace(go.Scatter(name="SIG", x=df["Date"], y=macd["sig"]), row=3, col=1)
+
+
+#     fig.update_layout(xaxis_rangeslider_visible=False)
+#     fig.show()
