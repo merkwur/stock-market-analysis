@@ -57,7 +57,7 @@ for i in REDUCED:
 # timestamp to date
 df["Date"] = df["OpenTime"].apply(lambda x: datetime.fromtimestamp(int(x/1000)).strftime("%d/%m/%Y, %H:%M:%S"))
 
-# contingency table and chi_squared 
+# contingency table and chi_squared statisrics
 if args.contingency:
     contingency = pd.DataFrame()
     for i in constants.intervals:
@@ -68,23 +68,17 @@ if args.contingency:
         contingency[f"{i}"] = ret
 
     weighted_greens = np.expand_dims(contingency.iloc[0].to_numpy(), axis=0).dot(constants.weights.T)[0].round(3)
-    weighted_red = np.expand_dims(contingency.iloc[1].to_numpy(), axis=0).dot(constants.weights.T)[0].round(3)
+    weighted_reds = np.expand_dims(contingency.iloc[1].to_numpy(), axis=0).dot(constants.weights.T)[0].round(3)
     expected = contingency.copy()
     contingency["simple_sum"] = contingency.sum(axis=1)
-    contingency["weighted_sum"] = [weighted_greens, weighted_red]
-    weighted_expected = weighted_greens / weighted_red
+    contingency["weighted_sum"] = [weighted_greens, weighted_reds]
+    weighted_expected = weighted_greens / weighted_reds
     expected.iloc[0] = contingency.loc[0, :"4h"] * weighted_expected
     expected.iloc[1] = contingency.loc[1, :"4h"] * weighted_expected
 
     green_chi = utils.chi_square(contingency.loc[0, :"4h"], expected.iloc[0])
     red_chi = utils.chi_square(contingency.loc[1, :"4h"], expected.iloc[1])
     
-    print(contingency)
-    print(weighted_expected)
-    print(expected)
-    print(green_chi)
-    print(red_chi)
-
 # preparing indicators
 indicators = pd.DataFrame()
 
@@ -153,58 +147,3 @@ if args.plot or args.pall:
 
     fig.update_layout(xaxis_rangeslider_visible=False)
     fig.show()
-
-# if args.pall:
-#     for i in EMA_RIBBON:
-#         indicators[f'{i}'] = df.Close.ewm(span=int(i)).mean()
-
-#     # rsi
-#     indicators["rsi"] = ta.rsi(df["Close"])
-
-#     # find the rsi signal peaks
-#     peaks, _ = find_peaks(indicators["rsi"].to_numpy())
-#     peak_pos = np.zeros(len(df["Date"]))
-#     peak_pos[peaks] = indicators["rsi"].iloc[peaks]
-
-#     # bollinger
-#     bollingers = ta.bbands(df["Close"], length=20, std=2, append=True)
-#     bollingers.columns = BBANDS_NAMES
-#     nan_indices = np.where(bollingers['low'].notnull())[0]
-#     length = nan_indices[0]
-#     bollingers.loc[:length] = np.flip(bollingers[length:length+length+1].to_numpy(), axis=0)
-
-#     # macd
-#     macd = ta.macd(df["Close"])
-#     macd.columns = MACD_NAMES 
-
-#     pio.templates.default = "plotly_dark"
-#     fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
-
-#     fig.add_trace(go.Candlestick(name="CAND", x=df['Date'],
-#                                          open=df['Open'],
-#                                          high=df['High'],
-#                                          low=df['Low'],
-#                                          close=df['Close']), row=1, col=1)
-        
-#     for e, i in enumerate([x for x in indicators.columns if x.isnumeric()]):
-#         fig.add_trace(go.Scatter(name=f"EMA{i}", x=df["Date"], y=indicators[f"{i}"], 
-#                                 line=dict(color=EMA_RIBBON_COLORS[e], width=1)),
-#                 row=1, col=1)
-
-#     fig.add_trace(go.Scatter(name="BUP", x=df["Date"], y=bollingers["high"], line=dict(color="rgba(131, 165, 152, .5)", width=1)),
-#                 row=1, col=1)
-#     fig.add_trace(go.Scatter(name="BDO", x=df["Date"], y=bollingers["low"], line=dict(color="rgba(131, 165, 152, .5)", width=1), fill="tonexty"),
-#                 row=1, col=1)
-
-
-#     fig.add_trace(go.Scatter(name="RSI", x=df["Date"], y=indicators["rsi"],line=dict(color="#ebdbb2")), row=2, col=1)
-#     fig.add_trace(go.Scatter(name="RSIPEAKS", mode="markers",x=df["Date"], y=peak_pos, marker=dict(size=5, color="#d65d0e")), row=2, col=1)
-
-
-#     fig.add_trace(go.Bar(name="HIST", x=df["Date"], y=macd["hist"]), row=3, col=1)    # I couldn't find the easier way will check later
-#     fig.add_trace(go.Scatter(name="MACD", x=df["Date"], y=macd["macd"]), row=3, col=1)
-#     fig.add_trace(go.Scatter(name="SIG", x=df["Date"], y=macd["sig"]), row=3, col=1)
-
-
-#     fig.update_layout(xaxis_rangeslider_visible=False)
-#     fig.show()
