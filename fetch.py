@@ -110,8 +110,9 @@ if args.macd or args.pall:
 
 # put the test cases inside of the statement 
 if args.test:
-    chi = utils.chi_square(df["Close"], df["High"].to_numpy())
-    print(chi)
+    print("This flag for testing a case")
+    utils.histogram(df["Open"], is_plot=True)
+
 
 if args.plot or args.pall:
 
