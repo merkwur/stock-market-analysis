@@ -125,15 +125,17 @@ if args.plot or args.pall:
                                          close=df['Close']), row=1, col=1)
     
     if args.bbands or args.pall:
+        fig.add_trace(go.Scatter(name="BUP", x=df["Date"], y=bollingers["high"], line=dict(color="rgba(131, 165, 152, .5)", width=1)),
+                    row=1, col=1)
+        fig.add_trace(go.Scatter(name="BDO", x=df["Date"], y=bollingers["low"], line=dict(color="rgba(131, 165, 152, .5)", width=1), fill="tonexty"),
+                    row=1, col=1)
+
+    if args.ema_ribb or args.pall:
         for e, i in enumerate([x for x in indicators.columns if x.isnumeric()]):
             fig.add_trace(go.Scatter(name=f"EMA{i}", x=df["Date"], y=indicators[f"{i}"], 
                                     line=dict(color=EMA_RIBBON_COLORS[e], width=1)),
                     row=1, col=1)
 
-        fig.add_trace(go.Scatter(name="BUP", x=df["Date"], y=bollingers["high"], line=dict(color="rgba(131, 165, 152, .5)", width=1)),
-                    row=1, col=1)
-        fig.add_trace(go.Scatter(name="BDO", x=df["Date"], y=bollingers["low"], line=dict(color="rgba(131, 165, 152, .5)", width=1), fill="tonexty"),
-                    row=1, col=1)
     
     if args.rsi or args.pall:
         fig.add_trace(go.Scatter(name="RSI", x=df["Date"], y=indicators["rsi"],line=dict(color="#ebdbb2")), row=2, col=1)
