@@ -2,14 +2,11 @@
 # https://github.com/raphaelvallat/antropy/blob/master/antropy/utils.py
 
 import numpy as np
-import constants
-import pandas as pd
 import scipy.stats as stats
 from scipy import signal
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 import sounddevice
-
 
 def standard_error(arr: np.ndarray) -> float:
     """s/sqrt(n)"""
@@ -70,7 +67,10 @@ def sign_test(openings: np.ndarray, closings: np.ndarray) -> float:
     outrun = np.where(closings > openings, 1, 0).sum()
     return (outrun - (size / 2)) / (standard_error(openings) * .5)
 
-def geometric_mean(arr: np.ndarray) -> float:
+def test_stats(observed: np.ndarray, expected: np.ndarray) -> float: #!!!!!!!!
+    return (observed - expected) / standard_error(data)
+
+def GM(arr: np.ndarray) -> float:
     return stats.gmean(arr)
 
 def entropy(openings: np.ndarray, closings: np.ndarray) -> float:
@@ -89,72 +89,63 @@ def monte_carlo_sampling(arr: np.ndarray, n_exp: int=1000) -> float:
     return (np.sqrt( np.sum(np.power((mues - mues.mean()), 2))) * 100).round(6)
 
 def PDE(mu: float, sigma: float, z: np.ndarray) -> np.ndarray:
-    """Return to probability density estimation of the distribution"""
     return (1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(-(z-mu)**2 / (2 * sigma**2)))
 
 def histogram(arr: np.ndarray, bins: int=42, is_plot: bool=False) -> plt or tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Returns either histogram plot or the histogram and PDE data. 
-    """
     if is_plot:
         plt.style.use("Solarize_Light2")
         count, b, _ = plt.hist(arr, bins=bins, density=True)
-        plt.plot(b, PDE(arr.mean(), arr.std(), b), c="orange")
+        plt.plot(b, PDE(arr.mean(), arr.std(), count), c="orange")
 
         plt.show()
     else: 
         count, b = np.histogram(arr, bins=bins, density=True)
-        pde = PDE(arr.mean(), arr.std(), b)
+        pde = PDE(arr.mean(), arr.std(), count)
 
         return (count, b, pde)
     
 def sample_histogram(arr: np.ndarray, bins: int=12, sample_size: int=100, is_plot: bool=False) -> plt or tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Returns either histogram plot or the histogram and PDE sampled data. 
-    """
-    arr = np.random.choice(arr, sample_size)
+    sample_arr = np.random.choice(arr, sample_size)
     if is_plot:
         plt.style.use("Solarize_Light2")
         count, b, _ = plt.hist(arr, bins=bins, density=True)
-        plt.plot(b, PDE(arr.mean(), arr.std(), b), c="orange")
+        plt.plot(b, PDE(arr.mean(), arr.std(), count), c="orange")
 
         plt.show()
     else: 
         count, b = np.histogram(arr, bins=bins, density=True)
-        pde = PDE(arr.mean(), arr.std(), b)
+        pde = PDE(arr.mean(), arr.std(), count)
 
         return (count, b, pde)    
     
-def chi_square(observed: np.ndarray, expected: np.ndarray) -> float:
-    return np.sum(np.power((observed - expected), 2) / expected)
-
-def contingency_over_intervals(contingency):
-    """
-    Calculates the chi_score of the green and red candles over 1m -> 4h interval
-    """
-    weighted_greens = np.expand_dims(contingency.iloc[0].to_numpy(), axis=0).dot(constants.weights.T)[0].round(3)
-    weighted_reds = np.expand_dims(contingency.iloc[1].to_numpy(), axis=0).dot(constants.weights.T)[0].round(3)
-    expected = contingency.copy()
-    contingency["simple_sum"] = contingency.sum(axis=1)
-    contingency["weighted_sum"] = [weighted_greens, weighted_reds]
-    weighted_expected = weighted_greens / weighted_reds
-    expected.iloc[0] = contingency.loc[0, :"4h"] * weighted_expected
-    expected.iloc[1] = contingency.loc[1, :"4h"] * weighted_expected
-
-    green_chi = chi_square(contingency.loc[0, :"4h"], expected.iloc[0])
-    red_chi = chi_square(contingency.loc[1, :"4h"], expected.iloc[1])
-
-    return [green_chi, red_chi]
-
-
-def contingency_table(openings: np.ndarray, closings: np.ndarray) -> list[int, int]:
-
-    """Returns the amount of the green and red candles"""
-
+def contingency_table(openings: np.ndarray, closing: np.ndarray) -> list[int, int]:
     ratio_a = np.where(closings > openings, 1, 0).sum()
     ratio_b = np.where(closings < openings, 1, 0).sum()
 
     return [ratio_a, ratio_b]
+
+
+def candle_mean(highs: np.ndarray, lows: np.ndarray) -> np.ndarray:
+    return (highs + lows) / 2
+
+def morelet(sig: np.ndarray, freq: float = 12.) -> np.ndarray:
+    plt.style.use("Solarize_Light2")
+    sig = sig / sig.max()
+    x = np.linspace(-np.pi, np.pi, 24)
+    kernel = .5 * np.cos(freq * x) * np.exp(-np.power(x, 2) / 2) # this is morelet funciton
+    mt = signal.convolve(sig, kernel, mode="same", method="auto")
+    logged = np.log(mt)
+    print(np.abs(logged.max()))
+    logged = np.nan_to_num(logged, nan=logged.min())
+    print(np.abs(logged.max()))
+    logged += 6
+    # logged = np.where(logged < -.6, logged+abs(logged.mean()), logged-1)
+    # logged = logged / np.abs(logged).max()
+
+    # sounddevice.play(logged, 2048)
+    # plt.ylim(-.5, 2)
+    plt.plot(logged, lw=.5)
+    plt.show()
 
 
 

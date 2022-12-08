@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
 import utils
+import test_utils
 import constants
 import warnings 
 warnings.filterwarnings("ignore")
@@ -37,7 +38,6 @@ REDUCED = ["OpenTime", "Open","High", "Low", "Close", "Volume"]
 
 # use your own API_KEY and API_SECRET key
 client = Client(api_key=API_KEY, api_secret=API_SECRET)              # Calling the Binance api
-prices = client.get_all_tickers()                                    # Get the Price data
 
 # Currency pairs
 pairs = ["ADAEUR", "BTCEUR", "ETHEUR"]                               
@@ -67,17 +67,7 @@ if args.contingency:
         ret = utils.contingency_table(table["Open"], table["Close"])
         contingency[f"{i}"] = ret
 
-    weighted_greens = np.expand_dims(contingency.iloc[0].to_numpy(), axis=0).dot(constants.weights.T)[0].round(3)
-    weighted_reds = np.expand_dims(contingency.iloc[1].to_numpy(), axis=0).dot(constants.weights.T)[0].round(3)
-    expected = contingency.copy()
-    contingency["simple_sum"] = contingency.sum(axis=1)
-    contingency["weighted_sum"] = [weighted_greens, weighted_reds]
-    weighted_expected = weighted_greens / weighted_reds
-    expected.iloc[0] = contingency.loc[0, :"4h"] * weighted_expected
-    expected.iloc[1] = contingency.loc[1, :"4h"] * weighted_expected
-
-    green_chi = utils.chi_square(contingency.loc[0, :"4h"], expected.iloc[0])
-    red_chi = utils.chi_square(contingency.loc[1, :"4h"], expected.iloc[1])
+    print(utils.contingency_over_intervals(contingency))
     
 # preparing indicators
 indicators = pd.DataFrame()
@@ -111,8 +101,8 @@ if args.macd or args.pall:
 # put the test cases inside of the statement 
 if args.test:
     print("This flag for testing a case")
-    utils.histogram(df["Open"], is_plot=True)
-
+    print(test_utils.candle_mean(df["High"].to_numpy(), df["Low"].to_numpy()))
+    
 
 if args.plot or args.pall:
 
