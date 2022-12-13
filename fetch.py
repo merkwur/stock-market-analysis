@@ -57,7 +57,7 @@ for i in REDUCED:
 # timestamp to date
 df["Date"] = df["OpenTime"].apply(lambda x: datetime.fromtimestamp(int(x/1000)).strftime("%d/%m/%Y, %H:%M:%S"))
 
-# contingency table and chi_squared statisrics
+# contingency table and chi_squared statistics
 if args.contingency:
     contingency = pd.DataFrame()
     for i in constants.intervals:
