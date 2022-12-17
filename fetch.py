@@ -25,7 +25,7 @@ parser.add_argument('-er', dest='ema_ribb', action='store_true', help="Includes 
 parser.add_argument('-bb', dest='bbands', action='store_true', help="Includes the Bolinger Bands to the plot, to show must include -p first")
 parser.add_argument('-rs', dest='rsi', action='store_true', help="Includes the RSI to the plot, to show must include -p first")
 parser.add_argument('-md', dest='macd', action='store_true', help="Includes the MACD to the plot, to show must include -p first")
-parser.add_argument('-pall', dest='pall', action='store_true', help="Includes the MACD to the plot, to show must include -p first")
+parser.add_argument('-pall', dest='pall', action='store_true', help="Plots all indicators, to show must include -p first")
 parser.add_argument('-test', dest='test', action='store_true', help="Plots the indicators")
 args = parser.parse_args()
 
