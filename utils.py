@@ -8,7 +8,6 @@ import scipy.stats as stats
 from scipy import signal
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
-import sounddevice
 
 
 def standard_error(arr: np.ndarray) -> float:
