@@ -3,7 +3,7 @@
 Simple stock market data analysis tool. 
 
 
-Add new flags to customize the plots.
+Add a flags to customize the plots.
 
 ```
 -p      # Plots the candlestick chart
